@@ -9,6 +9,7 @@ import hmac
 import hashlib
 from datetime import datetime, timezone
 
+import boto3
 import requests
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,8 +25,25 @@ WISE_API_KEY   = os.environ.get("WISE_API_KEY", "")
 WISE_PROFILE   = os.environ.get("WISE_PROFILE_ID", "")
 WISE_WH_SECRET = os.environ.get("WISE_WEBHOOK_SECRET", "")
 USE_MOCK       = os.environ.get("USE_MOCK_TRANSFERS", "true").lower() == "true"
+AWS_REGION     = os.environ.get("AWS_REGION", "ap-southeast-1")
+USE_IAM_AUTH   = os.environ.get("USE_IAM_AUTH", "false").lower() == "true"
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+def build_engine():
+    if not USE_IAM_AUTH:
+        return create_engine(DATABASE_URL, pool_pre_ping=True)
+    from urllib.parse import urlparse
+    import psycopg2
+    parsed = urlparse(DATABASE_URL)
+    host, port, user, dbname = parsed.hostname, parsed.port or 5432, parsed.username, parsed.path.lstrip("/")
+    def creator():
+        token = boto3.client("rds", region_name=AWS_REGION).generate_db_auth_token(
+            DBHostname=host, Port=port, DBUsername=user, Region=AWS_REGION)
+        return psycopg2.connect(host=host, port=port, user=user, password=token, dbname=dbname, sslmode="require")
+    return create_engine("postgresql+psycopg2://", creator=creator, pool_pre_ping=True)
+
+
+engine = build_engine()
 SessionLocal = sessionmaker(bind=engine)
 
 app = FastAPI(title="iwantmoney Transfer Pipeline", version="1.0.0")

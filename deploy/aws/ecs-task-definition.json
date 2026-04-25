@@ -19,7 +19,7 @@
       "environment": [
         {
           "name": "DATABASE_URL",
-          "value": "postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
+          "value": "postgresql://postgres:Probate2026!@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
         },
         {
           "name": "AWS_REGION",
@@ -31,6 +31,10 @@
         },
         {
           "name": "USE_REAL_SES",
+          "value": "true"
+        },
+        {
+          "name": "USE_IAM_AUTH",
           "value": "true"
         },
         {
@@ -146,11 +150,19 @@
       "environment": [
         {
           "name": "DATABASE_URL",
-          "value": "postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
+          "value": "postgresql://postgres:Probate2026!@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
         },
         {
           "name": "USE_MOCK_TRANSFERS",
           "value": "false"
+        },
+        {
+          "name": "USE_IAM_AUTH",
+          "value": "true"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "ap-southeast-1"
         }
       ],
       "secrets": [
