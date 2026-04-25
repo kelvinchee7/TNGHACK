@@ -1,0 +1,82 @@
+{
+  "family": "probate-platform",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::464817648724:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "api-gateway",
+      "image": "464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-api-gateway:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "ap-southeast-1"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
+        },
+        {
+          "name": "USE_REAL_TEXTRACT",
+          "value": "true"
+        },
+        {
+          "name": "SNS_SECURITY_ALERTS_ARN",
+          "value": "arn:aws:sns:ap-southeast-1:464817648724:iwantmoney-security-alerts"
+        },
+        {
+          "name": "SNS_ESTATE_EVENTS_ARN",
+          "value": "arn:aws:sns:ap-southeast-1:464817648724:iwantmoney-estate-events"
+        },
+        {
+          "name": "SES_SENDER",
+          "value": "noreply@iwantmoney.com.my"
+        },
+        {
+          "name": "USE_REAL_OSS",
+          "value": "true"
+        },
+        {
+          "name": "OSS_BUCKET",
+          "value": "iwantmoney-docs-prod"
+        },
+        {
+          "name": "OSS_ENDPOINT",
+          "value": "oss-ap-southeast-1.aliyuncs.com"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret-ABC123"
+        },
+        {
+          "name": "OSS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-oss-credentials"
+        },
+        {
+          "name": "OSS_ACCESS_KEY_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-oss-credentials"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/probate-platform",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

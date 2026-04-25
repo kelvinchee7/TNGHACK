@@ -53,15 +53,15 @@
       "secrets": [
         {
           "name": "AWS_ACCESS_KEY_ID",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials"
         },
         {
           "name": "AWS_SECRET_ACCESS_KEY",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials"
         },
         {
           "name": "JWT_SECRET",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret-ABC123"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret"
         },
         {
           "name": "OSS_ACCESS_KEY_ID",
@@ -126,11 +126,11 @@
       "secrets": [
         {
           "name": "AWS_ACCESS_KEY_ID",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials"
         },
         {
           "name": "AWS_SECRET_ACCESS_KEY",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials"
         },
         {
           "name": "OSS_ACCESS_KEY_ID",
@@ -172,11 +172,11 @@
       "secrets": [
         {
           "name": "TNG_API_KEY",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-tng-credentials-ABC123"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-tng-credentials"
         },
         {
           "name": "WISE_API_KEY",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-wise-credentials-ABC123"
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-wise-credentials"
         }
       ],
       "logConfiguration": {

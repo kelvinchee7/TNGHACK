@@ -1,0 +1,225 @@
+{
+    "taskDefinition": {
+        "taskDefinitionArn": "arn:aws:ecs:ap-southeast-1:464817648724:task-definition/probate-platform:3",
+        "containerDefinitions": [
+            {
+                "name": "api-gateway",
+                "image": "464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-api-gateway:latest",
+                "cpu": 0,
+                "portMappings": [
+                    {
+                        "containerPort": 8000,
+                        "hostPort": 8000,
+                        "protocol": "tcp"
+                    }
+                ],
+                "essential": true,
+                "environment": [
+                    {
+                        "name": "AWS_REGION",
+                        "value": "ap-southeast-1"
+                    },
+                    {
+                        "name": "DATABASE_URL",
+                        "value": "postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
+                    },
+                    {
+                        "name": "USE_REAL_TEXTRACT",
+                        "value": "true"
+                    },
+                    {
+                        "name": "SES_SENDER",
+                        "value": "noreply@iwantmoney.com.my"
+                    },
+                    {
+                        "name": "USE_REAL_SES",
+                        "value": "true"
+                    }
+                ],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "secrets": [
+                    {
+                        "name": "AWS_ACCESS_KEY_ID",
+                        "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+                    },
+                    {
+                        "name": "AWS_SECRET_ACCESS_KEY",
+                        "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+                    },
+                    {
+                        "name": "JWT_SECRET",
+                        "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret-ABC123"
+                    }
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-group": "/ecs/probate-platform",
+                        "awslogs-region": "ap-southeast-1",
+                        "awslogs-stream-prefix": "ecs"
+                    }
+                },
+                "healthCheck": {
+                    "command": [
+                        "CMD-SHELL",
+                        "curl -f http://localhost:8000/health || exit 1"
+                    ],
+                    "interval": 30,
+                    "timeout": 5,
+                    "retries": 3,
+                    "startPeriod": 60
+                },
+                "systemControls": []
+            },
+            {
+                "name": "will-scanner",
+                "image": "464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-will-scanner:latest",
+                "cpu": 0,
+                "portMappings": [
+                    {
+                        "containerPort": 8001,
+                        "hostPort": 8001,
+                        "protocol": "tcp"
+                    }
+                ],
+                "essential": true,
+                "environment": [
+                    {
+                        "name": "USE_REAL_TEXTRACT",
+                        "value": "true"
+                    },
+                    {
+                        "name": "S3_BUCKET",
+                        "value": "iwantmoney-docs-prod-464817648724"
+                    },
+                    {
+                        "name": "AWS_REGION",
+                        "value": "ap-southeast-1"
+                    }
+                ],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "secrets": [
+                    {
+                        "name": "AWS_ACCESS_KEY_ID",
+                        "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+                    },
+                    {
+                        "name": "AWS_SECRET_ACCESS_KEY",
+                        "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+                    }
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-group": "/ecs/probate-platform",
+                        "awslogs-region": "ap-southeast-1",
+                        "awslogs-stream-prefix": "ecs"
+                    }
+                },
+                "systemControls": []
+            },
+            {
+                "name": "transfer-pipeline",
+                "image": "464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-transfer-pipeline:latest",
+                "cpu": 0,
+                "portMappings": [
+                    {
+                        "containerPort": 8002,
+                        "hostPort": 8002,
+                        "protocol": "tcp"
+                    }
+                ],
+                "essential": true,
+                "environment": [
+                    {
+                        "name": "USE_MOCK_TRANSFERS",
+                        "value": "false"
+                    },
+                    {
+                        "name": "DATABASE_URL",
+                        "value": "postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
+                    }
+                ],
+                "mountPoints": [],
+                "volumesFrom": [],
+                "secrets": [
+                    {
+                        "name": "TNG_API_KEY",
+                        "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-tng-credentials-ABC123"
+                    },
+                    {
+                        "name": "WISE_API_KEY",
+                        "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-wise-credentials-ABC123"
+                    }
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-group": "/ecs/probate-platform",
+                        "awslogs-region": "ap-southeast-1",
+                        "awslogs-stream-prefix": "ecs"
+                    }
+                },
+                "systemControls": []
+            }
+        ],
+        "family": "probate-platform",
+        "taskRoleArn": "arn:aws:iam::464817648724:role/ecsTaskRole",
+        "executionRoleArn": "arn:aws:iam::464817648724:role/ecsTaskExecutionRole",
+        "networkMode": "awsvpc",
+        "revision": 3,
+        "volumes": [],
+        "status": "ACTIVE",
+        "requiresAttributes": [
+            {
+                "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+            },
+            {
+                "name": "ecs.capability.execution-role-awslogs"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.ecr-auth"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+            },
+            {
+                "name": "ecs.capability.secrets.asm.environment-variables"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.task-iam-role"
+            },
+            {
+                "name": "ecs.capability.container-health-check"
+            },
+            {
+                "name": "ecs.capability.execution-role-ecr-pull"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+            },
+            {
+                "name": "ecs.capability.task-eni"
+            },
+            {
+                "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+            }
+        ],
+        "placementConstraints": [],
+        "compatibilities": [
+            "EC2",
+            "FARGATE",
+            "MANAGED_INSTANCES"
+        ],
+        "requiresCompatibilities": [
+            "FARGATE"
+        ],
+        "cpu": "512",
+        "memory": "1024",
+        "registeredAt": "2026-04-25T21:34:48.865000+08:00",
+        "registeredBy": "arn:aws:sts::464817648724:assumed-role/AWSReservedSSO_finhack_IsbUsersPS_7bc9d66982914663/talenttap+finhackuser13@tngdigital.com.my"
+    },
+    "tags": []
+}
