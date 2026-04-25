@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
-const api = axios.create({ baseURL: "/api" });
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const api = axios.create({ baseURL: `${API_BASE}/api` });
 
 export function useEstates(status?: string) {
   const [data, setData] = useState<any[]>([]);
