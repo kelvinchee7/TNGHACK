@@ -40,7 +40,7 @@ jobs:
     
     - name: Build, tag, and push Docker image
       env:
-        ECR_REPOSITORY: ${{ matrix.service }}
+        ECR_REPOSITORY: probate-${{ matrix.service }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         cd services/${{ matrix.service }}
