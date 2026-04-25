@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE = import.meta.env.VITE_API_URL || "";
+const WILL_SCANNER_BASE = import.meta.env.VITE_WILL_SCANNER_URL || "http://localhost:8001";
+const TRANSFER_PIPELINE_BASE = import.meta.env.VITE_TRANSFER_PIPELINE_URL || "http://localhost:8002";
 const api = axios.create({ baseURL: `${API_BASE}/api` });
 
 export function useEstates(status?: string) {
@@ -72,7 +74,7 @@ export const claimApi = {
 
 export const transferApi = {
   execute: (estateId: string) =>
-    axios.post("http://localhost:8002/execute", { estate_id: estateId }).then(r => r.data),
+    axios.post(`${TRANSFER_PIPELINE_BASE}/execute`, { estate_id: estateId }).then(r => r.data),
 };
 
 export const documentApi = {

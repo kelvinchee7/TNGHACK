@@ -240,7 +240,8 @@ function WillScanPanel({ estateId, showToast }: { estateId: string; showToast: (
     fd.append("estate_id", estateId);
     fd.append("file", file);
     try {
-      const res = await fetch("http://localhost:8001/scan", { method: "POST", body: fd });
+      const willScannerBase = import.meta.env.VITE_WILL_SCANNER_URL || "http://localhost:8001";
+      const res = await fetch(`${willScannerBase}/scan`, { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
       setResult(data);
