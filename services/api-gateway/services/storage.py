@@ -4,13 +4,20 @@ Storage — Alibaba OSS in prod, local filesystem fallback in dev.
 import os
 import uuid
 from pathlib import Path
-from ..config import settings
+from config import settings
 
 LOCAL_STORAGE = Path(__file__).parent.parent.parent.parent / "local_storage"
 
 
 def upload_will_doc(estate_id: str, filename: str, data: bytes) -> str:
     key = f"wills/{estate_id}/{uuid.uuid4()}_{filename}"
+    if settings.use_real_oss:
+        return _oss_put(key, data)
+    return _local_put(key, data)
+
+
+def upload_legal_doc(estate_id: str, doc_type: str, filename: str, data: bytes) -> str:
+    key = f"legal/{estate_id}/{doc_type}/{uuid.uuid4()}_{filename}"
     if settings.use_real_oss:
         return _oss_put(key, data)
     return _local_put(key, data)

@@ -3,7 +3,7 @@ Notification helpers — SNS publish (prod) or stdout (dev).
 Alert email target: kelvinchee37@gmail.com (subscribed to SNS topic).
 """
 import json
-from ..config import settings
+from config import settings
 
 
 def notify(event_type: str, payload: dict) -> None:

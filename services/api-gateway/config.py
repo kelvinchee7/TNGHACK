@@ -37,6 +37,7 @@ class Settings:
     use_real_textract: bool = os.environ.get("USE_REAL_TEXTRACT", "false").lower() == "true"
     use_real_sns: bool = os.environ.get("USE_REAL_SNS", "false").lower() == "true"
     use_real_ses: bool = os.environ.get("USE_REAL_SES", "false").lower() == "true"
+    use_mock_transfers: bool = os.environ.get("USE_MOCK_TRANSFERS", "false").lower() == "true"
 
 
 settings = Settings()

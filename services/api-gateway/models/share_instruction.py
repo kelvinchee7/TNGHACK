@@ -2,7 +2,7 @@ import enum
 from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, Enum, Numeric, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from .base import Base
+from models.base import Base
 
 
 class TransferMethod(str, enum.Enum):

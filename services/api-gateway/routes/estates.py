@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from ..database import get_db
-from ..models import Estate, EstateStatus, AssetSnapshot, AssetType, AuditLog
-from ..services.asset_discovery import AssetDiscoveryService
-from ..services.notifications import notify
+from database import get_db
+from models import Estate, EstateStatus, AssetSnapshot, AssetType, AuditLog
+from services.asset_discovery import AssetDiscoveryService
+from services.notifications import notify
 
 router = APIRouter(prefix="/estates", tags=["estates"])
 
@@ -102,8 +102,8 @@ def get_estate(estate_id: str, db: Session = Depends(get_db)):
 
 @router.post("/{estate_id}/calculate")
 def calculate_shares(estate_id: str, request: Request, db: Session = Depends(get_db)):
-    from ..services.share_calculator import ShareCalculationEngine
-    from ..models import Beneficiary, ShareInstruction, TransferMethod, InstructionStatus
+    from services.share_calculator import ShareCalculationEngine
+    from models import Beneficiary, ShareInstruction, TransferMethod, InstructionStatus
 
     estate = db.get(Estate, estate_id)
     if not estate:
@@ -145,8 +145,8 @@ def calculate_shares(estate_id: str, request: Request, db: Session = Depends(get
 
 @router.post("/{estate_id}/dispatch-advisor")
 def dispatch_advisor(estate_id: str, request: Request, db: Session = Depends(get_db)):
-    from ..services.legal_workflow import LegalAdvisorWorkflow
-    from ..models import LegalApproval, ApprovalStatus
+    from services.legal_workflow import LegalAdvisorWorkflow
+    from models import LegalApproval, ApprovalStatus
 
     body = request.json() if hasattr(request, "json") else {}
     # Parse body manually for FastAPI
@@ -177,6 +177,134 @@ def dispatch_advisor(estate_id: str, request: Request, db: Session = Depends(get
                  {"advisor_email": advisor_email})
     db.commit()
     return {"status": "dispatched", "token_preview": token[:8] + "..."}
+
+
+@router.get("/{estate_id}/beneficiaries")
+def list_beneficiaries(estate_id: str, db: Session = Depends(get_db)):
+    estate = db.get(Estate, estate_id)
+    if not estate:
+        raise HTTPException(404, "Estate not found")
+    from models import Beneficiary
+    rows = db.query(Beneficiary).filter(Beneficiary.estate_id == estate_id).order_by(Beneficiary.created_at).all()
+    return [
+        {
+            "id": b.id,
+            "name": b.name_enc,
+            "nic": b.nic_enc[:4] + "****" + b.nic_enc[-2:] if len(b.nic_enc) > 6 else "****",
+            "email": b.email_enc,
+            "contact_number": b.contact_number,
+            "kyc_status": b.kyc_status,
+            "wallet_id": b.wallet_id,
+            "transfer_method": b.transfer_method,
+            "fx_currency": b.fx_currency,
+            "share_rm": float(b.share_rm) if b.share_rm else None,
+            "rejection_reason": b.rejection_reason,
+            "created_at": b.created_at.isoformat(),
+        }
+        for b in rows
+    ]
+
+
+@router.get("/{estate_id}/share-instructions")
+def list_share_instructions(estate_id: str, db: Session = Depends(get_db)):
+    estate = db.get(Estate, estate_id)
+    if not estate:
+        raise HTTPException(404, "Estate not found")
+    from models import ShareInstruction, Beneficiary
+    rows = (db.query(ShareInstruction)
+            .filter(ShareInstruction.estate_id == estate_id)
+            .order_by(ShareInstruction.created_at)
+            .all())
+    return [
+        {
+            "id": si.id,
+            "beneficiary_id": si.beneficiary_id,
+            "beneficiary_name": si.beneficiary.name_enc if si.beneficiary else "—",
+            "share_rm": float(si.share_rm),
+            "fx_currency": si.fx_currency,
+            "fx_amount": float(si.fx_amount) if si.fx_amount else None,
+            "transfer_method": si.transfer_method,
+            "status": si.status,
+            "created_at": si.created_at.isoformat(),
+        }
+        for si in rows
+    ]
+
+
+@router.get("/{estate_id}/transfers")
+def list_transfers(estate_id: str, db: Session = Depends(get_db)):
+    estate = db.get(Estate, estate_id)
+    if not estate:
+        raise HTTPException(404, "Estate not found")
+    from models import ShareInstruction, Transfer
+    instructions = (db.query(ShareInstruction)
+                    .filter(ShareInstruction.estate_id == estate_id)
+                    .all())
+    result = []
+    for si in instructions:
+        for t in si.transfers:
+            result.append({
+                "id": t.id,
+                "share_instruction_id": t.share_instruction_id,
+                "beneficiary_name": si.beneficiary.name_enc if si.beneficiary else "—",
+                "share_rm": float(si.share_rm),
+                "leg": t.leg,
+                "method": t.method,
+                "external_ref": t.external_ref,
+                "status": t.status,
+                "error_message": t.error_message,
+                "executed_at": t.executed_at.isoformat() if t.executed_at else None,
+                "settled_at": t.settled_at.isoformat() if t.settled_at else None,
+            })
+    result.sort(key=lambda x: x["executed_at"] or "", reverse=True)
+    return result
+
+
+@router.get("/{estate_id}/audit-log")
+def list_audit_log(estate_id: str, db: Session = Depends(get_db)):
+    estate = db.get(Estate, estate_id)
+    if not estate:
+        raise HTTPException(404, "Estate not found")
+    rows = (db.query(AuditLog)
+            .filter(AuditLog.estate_id == estate_id)
+            .order_by(AuditLog.created_at.desc())
+            .limit(100)
+            .all())
+    return [
+        {
+            "id": r.id,
+            "action": r.action,
+            "actor_id": r.actor_id,
+            "actor_ip": r.actor_ip,
+            "payload": json.loads(r.payload_json) if r.payload_json else None,
+            "created_at": r.created_at.isoformat(),
+        }
+        for r in rows
+    ]
+
+
+@router.get("/{estate_id}/legal-approvals")
+def list_legal_approvals(estate_id: str, db: Session = Depends(get_db)):
+    estate = db.get(Estate, estate_id)
+    if not estate:
+        raise HTTPException(404, "Estate not found")
+    from models import LegalApproval
+    rows = (db.query(LegalApproval)
+            .filter(LegalApproval.estate_id == estate_id)
+            .order_by(LegalApproval.created_at.desc())
+            .all())
+    return [
+        {
+            "id": a.id,
+            "advisor_email": a.advisor_email,
+            "status": a.status,
+            "signature_hash": a.signature_hash,
+            "rejection_reason": a.rejection_reason,
+            "signed_at": a.signed_at.isoformat() if a.signed_at else None,
+            "created_at": a.created_at.isoformat(),
+        }
+        for a in rows
+    ]
 
 
 def _estate_to_dict(e: Estate) -> dict:

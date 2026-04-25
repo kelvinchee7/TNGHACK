@@ -4,7 +4,7 @@ In local mode, prints the token to stdout instead of sending email.
 """
 import time
 import jwt as pyjwt
-from ..config import settings
+from config import settings
 
 
 class LegalAdvisorWorkflow:

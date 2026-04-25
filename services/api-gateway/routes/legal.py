@@ -7,10 +7,10 @@ import jwt as pyjwt
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from ..config import settings
-from ..database import get_db
-from ..models import Estate, EstateStatus, LegalApproval, ApprovalStatus, AuditLog
-from ..services.notifications import notify
+from config import settings
+from database import get_db
+from models import Estate, EstateStatus, LegalApproval, ApprovalStatus, AuditLog
+from services.notifications import notify
 
 router = APIRouter(prefix="/legal", tags=["legal"])
 

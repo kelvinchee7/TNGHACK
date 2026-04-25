@@ -4,7 +4,7 @@ In local/dev mode, returns deterministic mock data so no TNG API key is needed.
 """
 import os
 import requests
-from ..config import settings
+from config import settings
 
 
 class AssetDiscoveryService:

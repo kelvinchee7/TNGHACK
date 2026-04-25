@@ -20,8 +20,8 @@ class AuditMiddleware(BaseHTTPMiddleware):
             return response
 
         try:
-            from ..database import SessionLocal
-            from ..models.audit_log import AuditLog
+            from database import SessionLocal
+            from models.audit_log import AuditLog
 
             actor_id = getattr(request.state, "actor_id", None)
             estate_id = getattr(request.state, "estate_id", None)

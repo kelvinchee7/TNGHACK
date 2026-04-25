@@ -44,6 +44,15 @@ export const estateApi = {
   calculate: (id: string) => api.post(`/estates/${id}/calculate`).then(r => r.data),
   dispatchAdvisor: (id: string, email: string) =>
     api.post(`/estates/${id}/dispatch-advisor`, { advisor_email: email }).then(r => r.data),
+  beneficiaries: (id: string) => api.get(`/estates/${id}/beneficiaries`).then(r => r.data),
+  shareInstructions: (id: string) => api.get(`/estates/${id}/share-instructions`).then(r => r.data),
+  transfers: (id: string) => api.get(`/estates/${id}/transfers`).then(r => r.data),
+  legalApprovals: (id: string) => api.get(`/estates/${id}/legal-approvals`).then(r => r.data),
+  auditLog: (id: string) => api.get(`/estates/${id}/audit-log`).then(r => r.data),
+};
+
+export const demoApi = {
+  seed: () => api.post("/demo/seed").then(r => r.data),
 };
 
 export const claimApi = {
@@ -56,4 +65,20 @@ export const claimApi = {
 export const transferApi = {
   execute: (estateId: string) =>
     axios.post("http://localhost:8002/execute", { estate_id: estateId }).then(r => r.data),
+};
+
+export const documentApi = {
+  list: (estateId: string) =>
+    api.get(`/estates/${estateId}/documents`).then(r => r.data),
+  upload: (estateId: string, file: File, documentType: string, uploadedBy?: string) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("document_type", documentType);
+    if (uploadedBy) fd.append("uploaded_by", uploadedBy);
+    return api.post(`/estates/${estateId}/documents`, fd).then(r => r.data);
+  },
+  review: (estateId: string, docId: string, action: "approve" | "reject", reviewedBy: string, notes?: string) =>
+    api.post(`/estates/${estateId}/documents/${docId}/review`, {
+      action, reviewed_by: reviewedBy, reviewer_notes: notes,
+    }).then(r => r.data),
 };

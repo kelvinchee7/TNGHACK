@@ -2,7 +2,7 @@ import enum
 from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, Enum, Numeric, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from .base import Base
+from models.base import Base
 
 
 class AssetType(str, enum.Enum):

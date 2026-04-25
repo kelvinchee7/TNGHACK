@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
-from ..database import get_db
-from ..models import Beneficiary, KycStatus, Estate, AuditLog
-from ..services.notifications import notify
-from ..services.velocity_guard import ClaimVelocityGuard
+from database import get_db
+from models import Beneficiary, KycStatus, Estate, AuditLog
+from services.notifications import notify
+from services.velocity_guard import ClaimVelocityGuard
 
 router = APIRouter(prefix="/claims", tags=["claims"])
 
@@ -83,7 +83,7 @@ def submit_claim(body: SubmitClaimRequest, request: Request, db: Session = Depen
 
     # Send magic-link email (best-effort)
     try:
-        from ..services.notifications import send_magic_link
+        from services.notifications import send_magic_link
         send_magic_link(body.email, beneficiary.id)
     except Exception:
         pass
@@ -111,7 +111,7 @@ async def upload_kyc(
 
     # Upload to OSS (or local fallback)
     try:
-        from ..services.storage import upload_kyc_doc
+        from services.storage import upload_kyc_doc
         key = upload_kyc_doc(claim_id, step, file.filename or "doc", file_bytes)
     except Exception as exc:
         raise HTTPException(500, f"Storage upload failed: {exc}")

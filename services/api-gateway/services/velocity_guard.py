@@ -4,7 +4,7 @@ Uses a simple RDS query (no Redis needed for this volume).
 """
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
-from ..models import Beneficiary
+from models import Beneficiary
 
 
 class ClaimVelocityGuard:
