@@ -299,7 +299,7 @@ function WillScanPanel({ estateId, showToast }: { estateId: string; showToast: (
         {uploading ? "⟳ Scanning…" : "🔍 Scan Will Document"}
       </button>
 
-      {result && <AiResultPanel result={result} />}
+      {result && <AiResultPanel result={result} onNext={() => showToast("Switch to Beneficiaries tab to add claimants")} />}
     </GlassCard>
   );
 }
@@ -605,6 +605,164 @@ function DocumentsPanel({ estateId, showToast }: { estateId: string; showToast: 
         </div>
       )}
     </div>
+  );
+}
+
+// ── AI Result Panel ───────────────────────────────────────────────────────────
+function AiResultPanel({ result, onNext }: { result: any; onNext: () => void }) {
+  const bens: any[] = result.will_data?.beneficiaries ?? [];
+  const pipeline = result.will_data?.ner_pipeline;
+  const needsReview = result.needs_human_review;
+
+  function confColor(c: number) {
+    if (c >= 0.85) return theme.success;
+    if (c >= 0.70) return theme.warn;
+    return theme.error;
+  }
+
+  return (
+    <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+      {needsReview && (
+        <div style={{ padding: "10px 14px", borderRadius: theme.radiusSm, background: theme.warnLight, border: `1px solid #FDE68A`, color: "#92400E", fontSize: 13, fontWeight: 500, display: "flex", gap: 8 }}>
+          ⚠️ <strong>Manual review required</strong> — confidence below threshold or allocation mismatch
+        </div>
+      )}
+
+      {/* Pipeline stats */}
+      {pipeline && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+          {[
+            { label: "OCR Engine",       value: pipeline.ocr_engine  },
+            { label: "NER Model",        value: pipeline.ner_model   },
+            { label: "Tokens Processed", value: pipeline.tokens_processed?.toLocaleString() },
+            { label: "Processing Time",  value: `${pipeline.processing_ms} ms` },
+          ].map(k => (
+            <div key={k.label} style={{ padding: "10px 12px", borderRadius: theme.radiusSm, background: "#0F172A", border: "1px solid #1E293B" }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>{k.label}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#86EFAC", fontFamily: theme.fontMono }}>{k.value ?? "—"}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Extracted clauses */}
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>
+          Extracted Beneficiary Clauses ({bens.length})
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {bens.map((b, i) => (
+            <div key={i} style={{ padding: "12px 14px", borderRadius: theme.radiusSm, background: "#fff", border: `1px solid ${theme.borderLight}`, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: theme.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: theme.accent, flexShrink: 0 }}>{i + 1}</div>
+              <div style={{ flex: 1, minWidth: 120 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: theme.textPrimary }}>{b.name || "Unknown"}</div>
+                <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
+                  {b.nic ? `IC: ${b.nic} · ` : ""}{b.type?.toUpperCase()}
+                  {b.fraction !== undefined && ` · ${(b.fraction * 100).toFixed(0)}%`}
+                  {b.fixed_rm !== undefined && ` · RM ${Number(b.fixed_rm).toLocaleString("en-MY")}`}
+                </div>
+              </div>
+              {/* Confidence bar */}
+              <div style={{ minWidth: 120 }}>
+                <div style={{ fontSize: 10, color: theme.textMuted, marginBottom: 4 }}>
+                  NER Confidence: <strong style={{ color: confColor(b.confidence ?? 0) }}>{((b.confidence ?? 0) * 100).toFixed(0)}%</strong>
+                </div>
+                <div style={{ height: 6, borderRadius: 3, background: theme.borderLight, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${(b.confidence ?? 0) * 100}%`, background: confColor(b.confidence ?? 0), borderRadius: 3, transition: "width 0.6s ease" }} />
+                </div>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: b.type === "percentage" ? theme.infoLight : b.type === "fixed" ? theme.successLight : theme.warnLight, color: b.type === "percentage" ? theme.info : b.type === "fixed" ? theme.success : theme.warn, whiteSpace: "nowrap" }}>
+                {b.type}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Allocation summary */}
+      {result.will_data?.total_pct !== undefined && (
+        <div style={{ padding: "10px 14px", borderRadius: theme.radiusSm, background: theme.bg, border: `1px solid ${theme.border}`, display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, color: theme.textSecondary }}>Total allocated: <strong style={{ color: theme.textPrimary }}>{(result.will_data.total_pct * 100).toFixed(0)}%</strong></span>
+          {result.will_data.overallocation_warning && <span style={{ fontSize: 12, color: theme.error, fontWeight: 600 }}>⚠️ Overallocation detected</span>}
+          {!result.will_data.overallocation_warning && result.will_data.total_pct <= 1 && <span style={{ fontSize: 12, color: theme.success, fontWeight: 600 }}>✓ Allocation valid</span>}
+        </div>
+      )}
+
+      {/* Next step CTA */}
+      <div style={{ padding: "14px 16px", borderRadius: theme.radiusSm, background: theme.infoLight, border: `1px solid #BAE6FD`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#0369A1" }}>Next step: Add beneficiary claims</div>
+          <div style={{ fontSize: 11, color: "#0369A1", marginTop: 2 }}>Switch to the Beneficiaries tab to register each heir and start KYC</div>
+        </div>
+        <button onClick={onNext} style={{ padding: "8px 16px", borderRadius: theme.radiusSm, border: "none", background: theme.accent, color: "#fff", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
+          Go to Beneficiaries →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Per-estate Audit Log panel ────────────────────────────────────────────────
+function AuditLogPanel({ estateId }: { estateId: string }) {
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    estateApi.auditLog(estateId).then(setEvents).catch(() => {}).finally(() => setLoading(false));
+  }, [estateId]);
+
+  const ACTION_META: Record<string, { icon: string; color: string }> = {
+    ESTATE_CREATED: { icon: "📋", color: theme.accent }, ACCOUNT_FROZEN: { icon: "🔒", color: "#8B5CF6" },
+    ASSET_DISCOVERY_DONE: { icon: "🔍", color: theme.info }, DOCUMENT_UPLOADED: { icon: "📎", color: theme.info },
+    CLAIM_SUBMITTED: { icon: "👤", color: theme.accent }, WILL_SCANNED: { icon: "🤖", color: "#8B5CF6" },
+    KYC_APPROVED: { icon: "✅", color: theme.success }, KYC_REJECTED: { icon: "❌", color: theme.error },
+    SHARES_CALCULATED: { icon: "⚖️", color: theme.warn }, ADVISOR_DISPATCHED: { icon: "📨", color: theme.warn },
+    LEGAL_APPROVED: { icon: "🔏", color: theme.success }, LEGAL_REJECTED: { icon: "🚫", color: theme.error },
+    TRANSFER_SETTLED: { icon: "💰", color: theme.success }, ESTATE_CLOSED: { icon: "🏁", color: theme.success },
+    FRAUD_VELOCITY_BLOCK: { icon: "⚠️", color: theme.error },
+  };
+
+  return (
+    <GlassCard title="Estate Activity Log" subtitle="Chronological record of all actions on this estate">
+      {loading ? (
+        <div style={{ padding: "32px 0", textAlign: "center", color: theme.textMuted, fontSize: 13 }}>Loading…</div>
+      ) : events.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🔍</div>
+          <div style={{ fontSize: 13, color: theme.textMuted }}>No audit events yet</div>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {events.map((ev, idx) => {
+            const meta = ACTION_META[ev.action] ?? { icon: "📝", color: theme.textMuted };
+            const isLast = idx === events.length - 1;
+            return (
+              <div key={ev.id} style={{ display: "flex", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 28, flexShrink: 0 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: `${meta.color}15`, border: `2px solid ${meta.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, zIndex: 1 }}>{meta.icon}</div>
+                  {!isLast && <div style={{ width: 2, flex: 1, background: theme.borderLight, minHeight: 10 }} />}
+                </div>
+                <div style={{ flex: 1, paddingBottom: isLast ? 0 : 8, paddingTop: 2 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: meta.color, fontFamily: theme.fontMono }}>{ev.action}</span>
+                    <span style={{ fontSize: 10, color: theme.textMuted }}>{new Date(ev.created_at).toLocaleString("en-MY")}</span>
+                  </div>
+                  {ev.payload && Object.keys(ev.payload).length > 0 && (
+                    <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {Object.entries(ev.payload).map(([k, v]) => (
+                        <span key={k} style={{ fontSize: 10, color: theme.textSecondary }}>
+                          <span style={{ color: theme.textMuted }}>{k}:</span> <span style={{ fontFamily: theme.fontMono }}>{String(v)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </GlassCard>
   );
 }
 

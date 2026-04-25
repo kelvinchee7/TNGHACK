@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  api-gateway:
+    image: 464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-api-gateway:latest
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require
+      AWS_REGION: ap-southeast-1
+      USE_REAL_TEXTRACT: "true"
+      USE_REAL_SES: "true"
+      SES_SENDER: noreply@iwantmoney.com.my
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  will-scanner:
+    image: 464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-will-scanner:latest
+    ports:
+      - "8001:8001"
+    environment:
+      AWS_REGION: ap-southeast-1
+      USE_REAL_TEXTRACT: "true"
+      S3_BUCKET: iwantmoney-docs-prod-464817648724
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  transfer-pipeline:
+    image: 464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-transfer-pipeline:latest
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require
+      USE_MOCK_TRANSFERS: "false"
+      TNG_API_KEY: ${TNG_API_KEY}
+      WISE_API_KEY: ${WISE_API_KEY}
+      WISE_PROFILE_ID: ${WISE_PROFILE_ID}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api-gateway
+      - will-scanner
+      - transfer-pipeline
+    restart: unless-stopped

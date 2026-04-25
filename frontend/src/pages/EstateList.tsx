@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useEstates, estateApi } from "../hooks/useApi";
+import { Link, useNavigate } from "react-router-dom";
+import { useEstates, estateApi, demoApi } from "../hooks/useApi";
 import { GlassCard } from "../components/estate/GlassCard";
 import { StatusBadge } from "../components/estate/StatusBadge";
 import { theme } from "../theme";
@@ -37,7 +37,9 @@ const btnGhost: React.CSSProperties = {
 
 export function EstateList() {
   const { data: estates, loading, refetch } = useEstates();
+  const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [form, setForm] = useState({
     deceased_account_id: "", deceased_name: "", death_date: "", deceased_nic: "",
   });
@@ -74,9 +76,27 @@ export function EstateList() {
             {estates.length} total estate{estates.length !== 1 ? "s" : ""} registered
           </p>
         </div>
-        <button onClick={() => setCreating(c => !c)} style={btnPrimary}>
-          + New Estate
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={async () => {
+              setSeeding(true);
+              try {
+                const r = await demoApi.seed();
+                refetch();
+                navigate(`/estates/${r.estate_id}`);
+              } catch (e: any) {
+                alert(e.response?.data?.detail || e.message);
+              } finally { setSeeding(false); }
+            }}
+            disabled={seeding}
+            style={{ ...btnGhost, opacity: seeding ? 0.6 : 1, whiteSpace: "nowrap" }}
+          >
+            {seeding ? "Seeding…" : "🤖 Run Demo"}
+          </button>
+          <button onClick={() => setCreating(c => !c)} style={btnPrimary}>
+            + New Estate
+          </button>
+        </div>
       </div>
 
       {/* Create form */}

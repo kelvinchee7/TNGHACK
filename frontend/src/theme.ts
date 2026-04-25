@@ -135,4 +135,5 @@ export const GLOBAL_CSS = `
     50%       { opacity: 0.3; }
   }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 `;

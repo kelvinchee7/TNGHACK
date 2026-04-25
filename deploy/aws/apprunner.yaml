@@ -1,0 +1,64 @@
+# AWS App Runner Configuration
+# Deploy each service separately using App Runner
+
+api-gateway:
+  type: aws::apprunner::service
+  properties:
+    serviceName: probate-api-gateway
+    source:
+      type: IMAGE
+      image:
+        imageUri: 464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-api-gateway:latest
+      accessRoleArn: arn:aws:iam::464817648724:role/AppRunnerECRAccessRole
+    instanceConfiguration:
+      cpu: 1
+      memory: 2
+    environment:
+      DATABASE_URL: postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require
+      AWS_REGION: ap-southeast-1
+      USE_REAL_TEXTRACT: "true"
+      USE_REAL_SES: "true"
+      SES_SENDER: noreply@iwantmoney.com.my
+    secrets:
+      AWS_ACCESS_KEY_ID: arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123
+      AWS_SECRET_ACCESS_KEY: arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123
+      JWT_SECRET: arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret-ABC123
+
+will-scanner:
+  type: aws::apprunner::service
+  properties:
+    serviceName: probate-will-scanner
+    source:
+      type: IMAGE
+      image:
+        imageUri: 464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-will-scanner:latest
+      accessRoleArn: arn:aws:iam::464817648724:role/AppRunnerECRAccessRole
+    instanceConfiguration:
+      cpu: 1
+      memory: 2
+    environment:
+      AWS_REGION: ap-southeast-1
+      USE_REAL_TEXTRACT: "true"
+      S3_BUCKET: iwantmoney-docs-prod-464817648724
+    secrets:
+      AWS_ACCESS_KEY_ID: arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123
+      AWS_SECRET_ACCESS_KEY: arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123
+
+transfer-pipeline:
+  type: aws::apprunner::service
+  properties:
+    serviceName: probate-transfer-pipeline
+    source:
+      type: IMAGE
+      image:
+        imageUri: 464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-transfer-pipeline:latest
+      accessRoleArn: arn:aws:iam::464817648724:role/AppRunnerECRAccessRole
+    instanceConfiguration:
+      cpu: 1
+      memory: 2
+    environment:
+      DATABASE_URL: postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require
+      USE_MOCK_TRANSFERS: "false"
+    secrets:
+      TNG_API_KEY: arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-tng-credentials-ABC123
+      WISE_API_KEY: arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-wise-credentials-ABC123

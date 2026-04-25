@@ -1,0 +1,152 @@
+{
+  "family": "probate-platform",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::464817648724:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::464817648724:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "api-gateway",
+      "image": "464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-api-gateway:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "DATABASE_URL",
+          "value": "postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "ap-southeast-1"
+        },
+        {
+          "name": "USE_REAL_TEXTRACT",
+          "value": "true"
+        },
+        {
+          "name": "USE_REAL_SES",
+          "value": "true"
+        },
+        {
+          "name": "SES_SENDER",
+          "value": "noreply@iwantmoney.com.my"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "AWS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+        },
+        {
+          "name": "AWS_SECRET_ACCESS_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret-ABC123"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/probate-platform",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    },
+    {
+      "name": "will-scanner",
+      "image": "464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-will-scanner:latest",
+      "portMappings": [
+        {
+          "containerPort": 8001,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "ap-southeast-1"
+        },
+        {
+          "name": "USE_REAL_TEXTRACT",
+          "value": "true"
+        },
+        {
+          "name": "S3_BUCKET",
+          "value": "iwantmoney-docs-prod-464817648724"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "AWS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+        },
+        {
+          "name": "AWS_SECRET_ACCESS_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/probate-platform",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    },
+    {
+      "name": "transfer-pipeline",
+      "image": "464817648724.dkr.ecr.ap-southeast-1.amazonaws.com/probate-transfer-pipeline:latest",
+      "portMappings": [
+        {
+          "containerPort": 8002,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "DATABASE_URL",
+          "value": "postgresql://postgres@database-probate.cluster-c3cgiqqsiqbk.ap-southeast-1.rds.amazonaws.com:5432/postgres?sslmode=require"
+        },
+        {
+          "name": "USE_MOCK_TRANSFERS",
+          "value": "false"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "TNG_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-tng-credentials-ABC123"
+        },
+        {
+          "name": "WISE_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-wise-credentials-ABC123"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/probate-platform",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
