@@ -147,29 +147,37 @@ Versioning: ON
 USE_REAL_SES=true
 SES_SENDER=noreply@iwantmoney.com.my
 AWS_REGION=ap-southeast-1
-AWS_ACCESS_KEY_ID=<your-key>
-AWS_SECRET_ACCESS_KEY=<your-secret>
+AWS_ACCESS_KEY_ID=your_root_access_key
+AWS_SECRET_ACCESS_KEY=your_root_secret_key
 ```
 
 #### D. Amazon Textract (Will OCR)
-No setup needed — enable with:
-```
-USE_REAL_TEXTRACT=true
-```
-Ensure your IAM role has `textract:DetectDocumentText` permission.
 
-#### E. IAM Role / Credentials
-1. Console → IAM → Users → Create User: `iwantmoney-api`
-2. Attach policies:
-   - `AmazonRDSFullAccess`
-   - `AmazonS3FullAccess` (scoped to your bucket)
-   - `AmazonSESFullAccess`
-   - `AmazonTextractFullAccess`
-3. Create Access Key → save as env vars (never commit):
+Textract requires S3 staging for document processing.
+
+1. Ensure S3 bucket exists (see Step B above)
+2. Set in `.env.local`:
+   ```
+   USE_REAL_TEXTRACT=true
+   S3_BUCKET=iwantmoney-docs-prod-<account-id>
+   AWS_REGION=ap-southeast-1
+   ```
+
+3. Ensure your IAM role has `textract:DetectDocumentText` permission.
+
+**Note**: Textract automatically stages files to S3 and cleans up after processing.
+
+#### E. AWS Credentials
+
+Since you're using root account access keys, simply add them to `.env.local`:
+
 ```
-AWS_ACCESS_KEY_ID=AKIA...
-AWS_SECRET_ACCESS_KEY=...
+AWS_ACCESS_KEY_ID=your_root_access_key
+AWS_SECRET_ACCESS_KEY=your_root_secret_key
+AWS_REGION=ap-southeast-1
 ```
+
+⚠️ **Security Note**: Root account access has full permissions. Consider creating a dedicated IAM user with least-privilege access for production use.
 
 ---
 

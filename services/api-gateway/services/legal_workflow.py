@@ -34,7 +34,8 @@ def _generate_token(estate_id: str, advisor_email: str) -> str:
 
 def _send_ses_email(estate, advisor_email: str, approval_url: str) -> None:
     import boto3
-    client = boto3.client("ses", region_name=settings.aws_region)
+    session = boto3.Session(profile_name='finhack')
+    client = session.client("ses", region_name=settings.aws_region)
     client.send_email(
         Source=settings.ses_sender,
         Destination={"ToAddresses": [advisor_email]},

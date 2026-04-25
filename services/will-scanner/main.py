@@ -23,6 +23,7 @@ app.add_middleware(
 USE_REAL_TEXTRACT = os.environ.get("USE_REAL_TEXTRACT", "false").lower() == "true"
 USE_REAL_OSS      = os.environ.get("USE_REAL_OSS", "false").lower() == "true"
 AWS_REGION        = os.environ.get("AWS_REGION", "ap-southeast-1")
+S3_BUCKET         = os.environ.get("S3_BUCKET", "iwantmoney-docs-prod-464817648724")
 OSS_BUCKET        = os.environ.get("OSS_BUCKET", "iwantmoney-docs-prod")
 OSS_ENDPOINT      = os.environ.get("OSS_ENDPOINT", "https://oss-ap-southeast-1.aliyuncs.com")
 OSS_AK            = os.environ.get("OSS_ACCESS_KEY_ID", "")
@@ -150,15 +151,98 @@ def _upload_oss(key: str, data: bytes) -> str:
     return key
 
 
+def _download_from_oss(key: str) -> bytes:
+    import oss2
+    auth = oss2.Auth(OSS_AK, OSS_SK)
+    bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET)
+    return bucket.get_object(key).read()
+
+
 def _textract_ocr(oss_key: str, content_type: str) -> str:
     import boto3
-    client = boto3.client("textract", region_name=AWS_REGION)
-
-    # For production: stage file to S3 for Textract (Textract reads from S3, not OSS directly)
-    # This requires an S3 staging bucket — see guide.md Step 1.10
-    raise NotImplementedError(
-        "Production Textract requires S3 staging. Set USE_REAL_TEXTRACT=false for local dev."
-    )
+    import tempfile
+    from pathlib import Path
+    
+    # Initialize clients with SSO profile
+    session = boto3.Session(profile_name='finhack_IsbUsersPS-464817648724')
+    textract_client = session.client("textract", region_name=AWS_REGION)
+    s3_client = session.client("s3", region_name=AWS_REGION)
+    
+    staging_key = f"textract-staging/{oss_key.split('/')[-1]}"
+    
+    try:
+        # Download file from OSS to temporary location
+        if USE_REAL_OSS:
+            file_data = _download_from_oss(oss_key)
+        else:
+            # Read from local storage
+            local_path = Path(__file__).parent.parent.parent / "local_storage" / oss_key
+            file_data = local_path.read_bytes()
+        
+        # Stage file to S3 for Textract
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=staging_key,
+            Body=file_data,
+            ContentType=content_type
+        )
+        
+        # Start Textract asynchronous job
+        response = textract_client.start_document_text_detection(
+            DocumentLocation={
+                'S3Object': {
+                    'Bucket': S3_BUCKET,
+                    'Name': staging_key
+                }
+            }
+        )
+        
+        job_id = response['JobId']
+        
+        # Wait for job completion
+        import time
+        while True:
+            result = textract_client.get_document_text_detection(JobId=job_id)
+            status = result['JobStatus']
+            
+            if status == 'SUCCEEDED':
+                break
+            elif status == 'FAILED':
+                raise Exception(f"Textract job failed: {result.get('StatusMessage', 'Unknown error')}")
+            elif status in ['IN_PROGRESS', 'PARTIAL_SUCCESS']:
+                time.sleep(2)
+            else:
+                raise Exception(f"Unexpected Textract job status: {status}")
+        
+        # Extract text from Textract results
+        text_blocks = []
+        for block in result['Blocks']:
+            if block['BlockType'] == 'LINE':
+                text_blocks.append(block['Text'])
+        
+        # Get additional pages if any
+        next_token = result.get('NextToken')
+        while next_token:
+            result = textract_client.get_document_text_detection(
+                JobId=job_id,
+                NextToken=next_token
+            )
+            for block in result['Blocks']:
+                if block['BlockType'] == 'LINE':
+                    text_blocks.append(block['Text'])
+            next_token = result.get('NextToken')
+        
+        return '\n'.join(text_blocks)
+        
+    except Exception as e:
+        print(f"[TEXTRACT ERROR] {str(e)}")
+        raise
+    finally:
+        # Clean up staging file from S3
+        try:
+            s3_client.delete_object(Bucket=S3_BUCKET, Key=staging_key)
+        except Exception as cleanup_error:
+            print(f"[CLEANUP ERROR] Failed to delete staging file: {cleanup_error}")
 
 
 @app.get("/health")

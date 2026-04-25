@@ -17,7 +17,8 @@ def send_magic_link(email: str, claim_id: str) -> None:
     link = f"http://localhost:5173/portal?claim={claim_id}"
     if settings.use_real_ses:
         import boto3
-        client = boto3.client("ses", region_name=settings.aws_region)
+        session = boto3.Session(profile_name='finhack')
+        client = session.client("ses", region_name=settings.aws_region)
         client.send_email(
             Source=settings.ses_sender,
             Destination={"ToAddresses": [email]},
