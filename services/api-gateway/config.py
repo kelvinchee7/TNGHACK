@@ -12,8 +12,6 @@ class Settings:
 
     # AWS
     aws_region: str = os.environ.get("AWS_REGION", "ap-southeast-1")
-    sns_security_alerts_arn: str = os.environ.get("SNS_SECURITY_ALERTS_ARN", "")
-    sns_estate_events_arn: str = os.environ.get("SNS_ESTATE_EVENTS_ARN", "")
     ses_sender: str = os.environ.get("SES_SENDER", "noreply@iwantmoney.com.my")
 
     # Alibaba OSS
@@ -35,7 +33,6 @@ class Settings:
     # Feature flags
     use_real_oss: bool = os.environ.get("USE_REAL_OSS", "false").lower() == "true"
     use_real_textract: bool = os.environ.get("USE_REAL_TEXTRACT", "false").lower() == "true"
-    use_real_sns: bool = os.environ.get("USE_REAL_SNS", "false").lower() == "true"
     use_real_ses: bool = os.environ.get("USE_REAL_SES", "false").lower() == "true"
     use_mock_transfers: bool = os.environ.get("USE_MOCK_TRANSFERS", "false").lower() == "true"
 

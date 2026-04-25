@@ -151,31 +151,19 @@ AWS_ACCESS_KEY_ID=<your-key>
 AWS_SECRET_ACCESS_KEY=<your-secret>
 ```
 
-#### D. Amazon SNS (Security Alerts)
-1. Console → SNS → Topics → Create Topic → Standard
-2. Name: `iwantmoney-security-alerts`
-3. Create Subscription → Protocol: Email → Endpoint: `kelvinchee37@gmail.com`
-4. Confirm subscription email
-5. Copy Topic ARN → set in `.env.local`:
-```
-USE_REAL_SNS=true
-SNS_SECURITY_ALERTS_ARN=arn:aws:sns:ap-southeast-1:<account>:iwantmoney-security-alerts
-```
-
-#### E. Amazon Textract (Will OCR)
+#### D. Amazon Textract (Will OCR)
 No setup needed — enable with:
 ```
 USE_REAL_TEXTRACT=true
 ```
 Ensure your IAM role has `textract:DetectDocumentText` permission.
 
-#### F. IAM Role / Credentials
+#### E. IAM Role / Credentials
 1. Console → IAM → Users → Create User: `iwantmoney-api`
 2. Attach policies:
    - `AmazonRDSFullAccess`
    - `AmazonS3FullAccess` (scoped to your bucket)
    - `AmazonSESFullAccess`
-   - `AmazonSNSFullAccess`
    - `AmazonTextractFullAccess`
 3. Create Access Key → save as env vars (never commit):
 ```
