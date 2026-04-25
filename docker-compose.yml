@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: probate
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file: .env.local
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/probate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./local_storage:/app/local_storage
+
+  will-scanner:
+    build:
+      context: ./services/will-scanner
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    env_file: .env.local
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/probate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./local_storage:/app/local_storage
+
+  transfer-pipeline:
+    build:
+      context: ./services/transfer-pipeline
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    env_file: .env.local
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/probate
+      USE_MOCK_TRANSFERS: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
