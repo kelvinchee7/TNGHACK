@@ -7,15 +7,13 @@ import { theme } from "../theme";
 const STATUS_COLOR: Record<string, string> = { SENT: theme.warn, REVIEWED: theme.info, SIGNED: theme.success, REJECTED: theme.error };
 const STATUS_BG:    Record<string, string> = { SENT: theme.warnLight, REVIEWED: theme.infoLight, SIGNED: theme.successLight, REJECTED: theme.errorLight };
 
-function ApprovalBadge({ status }: { status: string }) {
+function SkeletonRow() {
   return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, padding: "2px 10px", borderRadius: 12,
-      background: STATUS_BG[status] || theme.bg,
-      color: STATUS_COLOR[status] || theme.textMuted,
-      border: `1px solid ${STATUS_COLOR[status] || theme.border}30`,
-      whiteSpace: "nowrap",
-    }}>{status}</span>
+    <tr>{[180, 100, 120, 160, 80].map((w, i) => (
+      <td key={i} style={{ padding: "13px 16px" }}>
+        <div style={{ height: 13, width: w, borderRadius: 6, background: "linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)", backgroundSize: "400% 100%", animation: "shimmer 1.4s ease-in-out infinite" }} />
+      </td>
+    ))}</tr>
   );
 }
 
@@ -28,145 +26,117 @@ export function LegalQueuePage() {
     globalApi.legalQueue().then(setGroups).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const allStatuses = ["ALL", "SENT", "REVIEWED", "SIGNED", "REJECTED"];
+  const allApprovals = groups.flatMap(g => g.approvals);
+  const pending  = allApprovals.filter(a => a.status === "SENT").length;
+  const signed   = allApprovals.filter(a => a.status === "SIGNED").length;
+  const rejected = allApprovals.filter(a => a.status === "REJECTED").length;
 
-  const filtered = groups.map(g => ({
+  const filteredGroups = groups.map(g => ({
     ...g,
     approvals: g.approvals.filter((a: any) => filter === "ALL" || a.status === filter),
   })).filter(g => g.approvals.length > 0);
 
-  const total    = groups.reduce((s, g) => s + g.approvals.length, 0);
-  const pending  = groups.reduce((s, g) => s + g.approvals.filter((a: any) => a.status === "SENT").length, 0);
-  const signed   = groups.reduce((s, g) => s + g.approvals.filter((a: any) => a.status === "SIGNED").length, 0);
-  const rejected = groups.reduce((s, g) => s + g.approvals.filter((a: any) => a.status === "REJECTED").length, 0);
-
   return (
     <div style={{ animation: "fadeInUp 0.3s ease" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: theme.textPrimary, letterSpacing: "-0.4px" }}>Legal Queue</h1>
-        <p style={{ fontSize: 13, color: theme.textSecondary, marginTop: 3 }}>Advisor approval pipeline across all estates</p>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: theme.textPrimary, letterSpacing: "-0.5px" }}>Legal Queue</h1>
+        <p style={{ fontSize: 13, color: theme.textSecondary, marginTop: 4 }}>Advisor approval pipeline across all estates</p>
       </div>
 
-      {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
+      {/* KPI row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
         {[
-          { label: "Total Dispatched", value: total,    color: theme.accent   },
-          { label: "Awaiting Review",  value: pending,  color: theme.warn     },
-          { label: "Signed",           value: signed,   color: theme.success  },
-          { label: "Rejected",         value: rejected, color: theme.error    },
+          { label: "Total Dispatched", value: allApprovals.length, icon: "📨", color: theme.accent  },
+          { label: "Awaiting Review",  value: pending,             icon: "⏳", color: theme.warn    },
+          { label: "Signed",           value: signed,              icon: "🔏", color: theme.success },
+          { label: "Rejected",         value: rejected,            icon: "🚫", color: theme.error   },
         ].map(k => (
-          <div key={k.label} style={{
-            background: "#fff", borderRadius: theme.radiusLg,
-            border: `1px solid ${theme.border}`, boxShadow: theme.shadowCard,
-            padding: "18px 20px", borderLeft: `4px solid ${k.color}`,
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: theme.textMuted, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 6 }}>{k.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: theme.textPrimary }}>{k.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Filter tabs */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
-        {allStatuses.map(s => (
-          <button key={s} onClick={() => setFilter(s)} style={{
-            padding: "7px 14px", borderRadius: theme.radiusSm, fontSize: 12, fontWeight: 600,
-            border: filter === s ? "none" : `1px solid ${theme.border}`,
-            background: filter === s ? theme.accent : "#fff",
-            color: filter === s ? "#fff" : theme.textSecondary,
-            cursor: "pointer", fontFamily: "inherit",
-          }}>{s === "ALL" ? "All Statuses" : s}</button>
-        ))}
-      </div>
-
-      {loading ? (
-        <GlassCard><div style={{ padding: "48px 0", textAlign: "center", color: theme.textMuted }}>Loading…</div></GlassCard>
-      ) : filtered.length === 0 ? (
-        <GlassCard>
-          <div style={{ padding: "64px 0", textAlign: "center" }}>
-            <div style={{ fontSize: 36, marginBottom: 10 }}>⚖️</div>
-            <div style={{ fontSize: 14, color: theme.textMuted }}>No legal approvals found</div>
-            <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 6 }}>Dispatch advisors from an estate's Legal tab</div>
-          </div>
-        </GlassCard>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {filtered.map(group => (
-            <GlassCard key={group.estate_id}>
-              {/* Estate header */}
-              <div style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                marginBottom: 14, paddingBottom: 12, borderBottom: `1px solid ${theme.borderLight}`,
-                flexWrap: "wrap", gap: 10,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 10, background: "#EDE9FE",
-                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0,
-                  }}>⚖️</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: theme.textPrimary }}>{group.deceased_name}</div>
-                    <div style={{ fontSize: 12, color: theme.textMuted }}>
-                      RM {Number(group.total_rm).toLocaleString("en-MY", { minimumFractionDigits: 2 })} · {group.estate_status}
-                    </div>
-                  </div>
-                </div>
-                <Link to={`/estates/${group.estate_id}`} style={{
-                  fontSize: 12, fontWeight: 600, color: theme.accent,
-                  padding: "5px 12px", borderRadius: 6,
-                  border: `1px solid ${theme.accentLight}`, background: theme.accentLight,
-                }}>View Estate →</Link>
+          <div key={k.label} style={{ background: "#fff", borderRadius: theme.radiusLg, border: `1px solid ${theme.border}`, boxShadow: theme.shadowCard, padding: "20px 22px", borderLeft: `4px solid ${k.color}`, animation: "fadeInUp 0.35s ease both" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: theme.textMuted, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 8 }}>{k.label}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: theme.textPrimary, letterSpacing: "-0.6px", lineHeight: 1 }}>{k.value}</div>
               </div>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: `${k.color}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{k.icon}</div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-              {/* Approval rows */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {group.approvals.map((a: any) => (
-                  <div key={a.id} style={{
-                    display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-                    padding: "12px 14px", borderRadius: theme.radiusSm,
-                    background: STATUS_BG[a.status] ? `${STATUS_BG[a.status]}60` : theme.bg,
-                    border: `1px solid ${STATUS_COLOR[a.status] || theme.border}25`,
-                    flexWrap: "wrap", gap: 10,
-                  }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: theme.textPrimary }}>
-                          {a.advisor_email}
-                        </span>
-                        <ApprovalBadge status={a.status} />
-                      </div>
-                      <div style={{ fontSize: 11, color: theme.textMuted }}>
-                        Dispatched {new Date(a.created_at).toLocaleString("en-MY")}
-                        {a.signed_at && ` · Signed ${new Date(a.signed_at).toLocaleString("en-MY")}`}
-                      </div>
-                      {a.signature_hash && (
-                        <div style={{ fontSize: 10, fontFamily: theme.fontMono, color: theme.textMuted, marginTop: 4 }}>
-                          Sig: {a.signature_hash.substring(0, 24)}…
-                        </div>
-                      )}
-                      {a.rejection_reason && (
-                        <div style={{ fontSize: 11, color: theme.error, marginTop: 4 }}>
-                          Reason: {a.rejection_reason}
-                        </div>
-                      )}
-                    </div>
-                    {a.status === "SIGNED" && (
-                      <div style={{
-                        display: "flex", alignItems: "center", gap: 6,
-                        padding: "4px 10px", borderRadius: 20,
-                        background: theme.successLight, border: `1px solid #A7F3D0`,
-                        fontSize: 11, fontWeight: 600, color: "#065F46",
-                      }}>
-                        ✓ Cryptographically signed
-                      </div>
-                    )}
-                  </div>
+      {/* Table card */}
+      <GlassCard
+        title="Approval Queue"
+        subtitle="Grouped by estate · advisor sign-off required before disbursement"
+        action={
+          <div style={{ display: "flex", gap: 6 }}>
+            {["ALL", "SENT", "SIGNED", "REJECTED"].map(s => (
+              <button key={s} onClick={() => setFilter(s)} style={{
+                padding: "6px 12px", borderRadius: theme.radiusSm, fontSize: 11, fontWeight: 600,
+                border: filter === s ? "none" : `1px solid ${theme.border}`,
+                background: filter === s ? (STATUS_COLOR[s] || theme.accent) : "#fff",
+                color: filter === s ? "#fff" : theme.textSecondary,
+                cursor: "pointer", fontFamily: "inherit",
+              }}>{s === "ALL" ? "All" : s}</button>
+            ))}
+          </div>
+        }
+      >
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: `2px solid ${theme.borderLight}` }}>
+                {["Estate", "Advisor Email", "Status", "Dispatched", "Signed At", "Signature"].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "8px 16px", fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
-              </div>
-            </GlassCard>
-          ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                [1, 2, 3].map(i => <SkeletonRow key={i} />)
+              ) : filteredGroups.length === 0 ? (
+                <tr><td colSpan={6} style={{ padding: "56px 16px", textAlign: "center" }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>⚖️</div>
+                  <div style={{ fontSize: 14, color: theme.textSecondary, fontWeight: 500 }}>No legal approvals found</div>
+                  <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 6 }}>Dispatch advisors from an estate's <strong>Legal</strong> tab</div>
+                </td></tr>
+              ) : (
+                filteredGroups.map(group => (
+                  <React.Fragment key={group.estate_id}>
+                    <tr>
+                      <td colSpan={6} style={{ padding: "10px 16px 6px", background: theme.bg }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: theme.textPrimary }}>{group.deceased_name}</span>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 7px", borderRadius: 10, background: theme.accentLight, color: theme.accent }}>{group.estate_status}</span>
+                          <span style={{ fontSize: 11, color: theme.textMuted, fontFamily: theme.fontMono }}>RM {Number(group.total_rm).toLocaleString("en-MY", { minimumFractionDigits: 2 })}</span>
+                          <Link to={`/estates/${group.estate_id}`} style={{ fontSize: 11, color: theme.accent, fontWeight: 600 }}>View estate →</Link>
+                        </div>
+                      </td>
+                    </tr>
+                    {group.approvals.map((a: any) => (
+                      <tr key={a.id} style={{ borderBottom: `1px solid ${theme.borderLight}` }}
+                        onMouseEnter={e => (e.currentTarget.style.background = theme.bg)}
+                        onMouseLeave={e => (e.currentTarget.style.background = "")}>
+                        <td style={{ padding: "12px 16px", fontSize: 11, color: theme.textMuted, fontFamily: theme.fontMono }}>{group.estate_id.substring(0, 8)}…</td>
+                        <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: theme.textPrimary }}>{a.advisor_email}</td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 12, background: STATUS_BG[a.status] || theme.bg, color: STATUS_COLOR[a.status] || theme.textMuted, border: `1px solid ${STATUS_COLOR[a.status] || theme.border}30`, whiteSpace: "nowrap" }}>
+                            {a.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 16px", fontSize: 12, color: theme.textMuted, whiteSpace: "nowrap" }}>{new Date(a.created_at).toLocaleString("en-MY")}</td>
+                        <td style={{ padding: "12px 16px", fontSize: 12, color: theme.textMuted, whiteSpace: "nowrap" }}>{a.signed_at ? new Date(a.signed_at).toLocaleString("en-MY") : "—"}</td>
+                        <td style={{ padding: "12px 16px", fontSize: 11, fontFamily: theme.fontMono, color: theme.textMuted }}>
+                          {a.signature_hash ? a.signature_hash.substring(0, 16) + "…" : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </GlassCard>
     </div>
   );
 }
