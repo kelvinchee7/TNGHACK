@@ -125,7 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         }
       `}</style>
 
-      <div style={{ display: "flex", minHeight: "100vh", background: theme.bg }}>
+      <div style={{ display: "flex", minHeight: "100vh", width: "100%", background: theme.bg }}>
 
         {/* ── Desktop sidebar ─────────────────────────────────── */}
         {!isMobile && (
@@ -214,8 +214,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </header>
 
           {/* Page content */}
-          <main className="main-content" style={{ flex: 1, padding: 28, overflowY: "auto" }}>
-            {children}
+          <main className="main-content" style={{ flex: 1, padding: 28, overflowY: "auto", minWidth: 0, width: "100%", boxSizing: "border-box" }}>
+            <div style={{ width: "100%", minWidth: 0 }}>
+              {children}
+            </div>
           </main>
         </div>
       </div>
