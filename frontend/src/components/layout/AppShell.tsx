@@ -185,7 +185,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               )}
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: theme.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  TNG eWallet · Probate Portal
+                  TNG eWallet · e-Trust Portal
                 </div>
                 <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 1 }}>
                   Deceased account estate settlement
