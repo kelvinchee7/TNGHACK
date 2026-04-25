@@ -215,7 +215,7 @@ export function EstateDetail() {
         </div>
       )}
 
-      {tab === "willscan"      && <WillScanPanel estateId={estate.id} showToast={showToast} />}
+      {tab === "willscan"      && <WillScanPanel estateId={estate.id} showToast={showToast} onNavigate={setTab} />}
       {tab === "documents"     && <DocumentsPanel estateId={estate.id} showToast={showToast} />}
       {tab === "beneficiaries" && <BeneficiariesPanel estateId={estate.id} showToast={showToast} />}
       {tab === "distribution"  && <DistributionPanel estateId={estate.id} showToast={showToast} totalRm={estate.total_rm} />}
@@ -227,7 +227,7 @@ export function EstateDetail() {
 }
 
 // ── Will Scan sub-panel ───────────────────────────────────────────────────────
-function WillScanPanel({ estateId, showToast }: { estateId: string; showToast: (m: string, ok?: boolean) => void }) {
+function WillScanPanel({ estateId, showToast, onNavigate }: { estateId: string; showToast: (m: string, ok?: boolean) => void; onNavigate: (tab: string) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -300,7 +300,7 @@ function WillScanPanel({ estateId, showToast }: { estateId: string; showToast: (
         {uploading ? "⟳ Scanning…" : "🔍 Scan Will Document"}
       </button>
 
-      {result && <AiResultPanel result={result} onNext={() => showToast("Switch to Beneficiaries tab to add claimants")} />}
+      {result && <AiResultPanel result={result} onNext={() => onNavigate("beneficiaries")} />}
     </GlassCard>
   );
 }
