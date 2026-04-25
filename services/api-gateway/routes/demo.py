@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from config import settings
 from database import get_db
 from models import (
     Estate, EstateStatus, AssetSnapshot, AssetType,
