@@ -55,6 +55,13 @@ export const demoApi = {
   seed: () => api.post("/demo/seed").then(r => r.data),
 };
 
+export const globalApi = {
+  beneficiaries: () => api.get("/beneficiaries").then(r => r.data),
+  legalQueue:    () => api.get("/legal-queue").then(r => r.data),
+  transfers:     () => api.get("/transfers").then(r => r.data),
+  audit:         (limit = 200) => api.get("/audit", { params: { limit } }).then(r => r.data),
+};
+
 export const claimApi = {
   submit: (body: any) => api.post("/claims", body).then(r => r.data),
   approve: (id: string) => api.post(`/claims/${id}/approve`).then(r => r.data),

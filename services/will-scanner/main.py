@@ -163,10 +163,9 @@ def _textract_ocr(oss_key: str, content_type: str) -> str:
     import tempfile
     from pathlib import Path
     
-    # Initialize clients with SSO profile
-    session = boto3.Session(profile_name='finhack_IsbUsersPS-464817648724')
-    textract_client = session.client("textract", region_name=AWS_REGION)
-    s3_client = session.client("s3", region_name=AWS_REGION)
+    # Initialize clients with environment variables (production-ready)
+    textract_client = boto3.client("textract", region_name=AWS_REGION)
+    s3_client = boto3.client("s3", region_name=AWS_REGION)
     
     staging_key = f"textract-staging/{oss_key.split('/')[-1]}"
     

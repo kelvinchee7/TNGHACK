@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import create_tables, health_check
 from middleware.audit import AuditMiddleware
-from routes import estates, beneficiaries, legal, documents, demo
+from routes import estates, beneficiaries, legal, documents, demo, global_views
 
 app = FastAPI(
     title="iwantmoney Probate API",
@@ -25,6 +25,7 @@ app.include_router(beneficiaries.router, prefix="/api")
 app.include_router(legal.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(demo.router, prefix="/api")
+app.include_router(global_views.router, prefix="/api")
 
 
 @app.on_event("startup")

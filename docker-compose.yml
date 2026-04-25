@@ -26,6 +26,10 @@ services:
     env_file: .env.local
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/probate
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+      AWS_REGION: ${AWS_REGION}
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,6 +45,10 @@ services:
     env_file: .env.local
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/probate
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+      AWS_REGION: ${AWS_REGION}
     depends_on:
       postgres:
         condition: service_healthy

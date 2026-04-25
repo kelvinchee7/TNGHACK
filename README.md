@@ -157,6 +157,7 @@ Textract requires S3 staging for document processing.
 
 1. Ensure S3 bucket exists (see Step B above)
 2. Set in `.env.local`:
+
    ```
    USE_REAL_TEXTRACT=true
    S3_BUCKET=iwantmoney-docs-prod-<account-id>
