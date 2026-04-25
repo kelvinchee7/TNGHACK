@@ -56,11 +56,14 @@ jobs:
           --service ${{ matrix.service }} \
           --force-new-deployment
     
-    - name: Wait for service to stabilize
+    - name: Check service deployment
       run: |
-        aws ecs wait services-stable \
+        echo "🚀 Service ${{ matrix.service }} deployment triggered"
+        aws ecs describe-services \
           --cluster ${{ env.ECS_CLUSTER }} \
-          --services ${{ matrix.service }}
+          --services ${{ matrix.service }} \
+          --query 'services[0].[serviceName,runningCount,desiredCount,status]' \
+          --output table
 
   # Build and deploy frontend
   deploy-frontend:

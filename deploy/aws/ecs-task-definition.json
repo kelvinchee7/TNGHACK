@@ -36,6 +36,18 @@
         {
           "name": "SES_SENDER",
           "value": "noreply@iwantmoney.com.my"
+        },
+        {
+          "name": "USE_REAL_OSS",
+          "value": "true"
+        },
+        {
+          "name": "OSS_BUCKET",
+          "value": "iwantmoney-docs-prod"
+        },
+        {
+          "name": "OSS_ENDPOINT",
+          "value": "oss-ap-southeast-1.aliyuncs.com"
         }
       ],
       "secrets": [
@@ -50,6 +62,14 @@
         {
           "name": "JWT_SECRET",
           "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret-ABC123"
+        },
+        {
+          "name": "OSS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-oss-credentials"
+        },
+        {
+          "name": "OSS_ACCESS_KEY_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-oss-credentials"
         }
       ],
       "logConfiguration": {
@@ -89,6 +109,18 @@
         {
           "name": "S3_BUCKET",
           "value": "iwantmoney-docs-prod-464817648724"
+        },
+        {
+          "name": "USE_REAL_OSS",
+          "value": "true"
+        },
+        {
+          "name": "OSS_BUCKET",
+          "value": "iwantmoney-docs-prod"
+        },
+        {
+          "name": "OSS_ENDPOINT",
+          "value": "oss-ap-southeast-1.aliyuncs.com"
         }
       ],
       "secrets": [
@@ -99,6 +131,14 @@
         {
           "name": "AWS_SECRET_ACCESS_KEY",
           "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-ABC123"
+        },
+        {
+          "name": "OSS_ACCESS_KEY_ID",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-oss-credentials"
+        },
+        {
+          "name": "OSS_ACCESS_KEY_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-oss-credentials"
         }
       ],
       "logConfiguration": {
