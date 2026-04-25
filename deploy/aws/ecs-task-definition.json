@@ -52,14 +52,6 @@
       ],
       "secrets": [
         {
-          "name": "AWS_ACCESS_KEY_ID",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-M5wAFU:AWS_ACCESS_KEY_ID::"
-        },
-        {
-          "name": "AWS_SECRET_ACCESS_KEY",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-M5wAFU:AWS_SECRET_ACCESS_KEY::"
-        },
-        {
           "name": "JWT_SECRET",
           "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-jwt-secret-fxu0Ml"
         },
@@ -124,14 +116,6 @@
         }
       ],
       "secrets": [
-        {
-          "name": "AWS_ACCESS_KEY_ID",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-M5wAFU:AWS_ACCESS_KEY_ID::"
-        },
-        {
-          "name": "AWS_SECRET_ACCESS_KEY",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-aws-credentials-M5wAFU:AWS_SECRET_ACCESS_KEY::"
-        },
         {
           "name": "OSS_ACCESS_KEY_ID",
           "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:464817648724:secret:probate-oss-credentials-Bsa1oQ:OSS_ACCESS_KEY_ID::"
