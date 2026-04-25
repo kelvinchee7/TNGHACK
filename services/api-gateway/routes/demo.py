@@ -10,7 +10,6 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from config import settings
 from database import get_db
 from models import (
     Estate, EstateStatus, AssetSnapshot, AssetType,
@@ -43,8 +42,6 @@ def _log(db: Session, estate_id: str, action: str, minutes_ago: int, payload=Non
 
 @router.post("/seed", status_code=201)
 def seed_demo(db: Session = Depends(get_db)):
-    if not settings.use_mock_transfers:
-        raise HTTPException(403, "Demo seed only available in mock/dev mode")
 
     estate_id = str(uuid.uuid4())
 
