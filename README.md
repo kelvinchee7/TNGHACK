@@ -7,7 +7,7 @@ AI-powered deceased TNG eWallet estate settlement system.
 ## Quick Start (Local Dev)
 
 ### 1. Prerequisites
-- Python 3.13 — `C:\Users\Joseph\AppData\Local\Programs\Python\Python313\python.exe`
+- Python 3.13 — 
 - Node.js 18+
 - Docker Desktop (for PostgreSQL)
 - Git
